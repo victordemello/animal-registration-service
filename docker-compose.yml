@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: animal-registration-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-animal_registration}
+      POSTGRES_USER: ${POSTGRES_USER:-animal_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-animal_secret}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-animal_user} -d ${POSTGRES_DB:-animal_registration}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - animal-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: animal-registration-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - animal-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: animal-registration-service
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-animal_registration}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-animal_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-animal_secret}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - animal-network
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  animal-network:
+    driver: bridge
