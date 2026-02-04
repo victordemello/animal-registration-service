@@ -72,6 +72,7 @@ Para conectar ao PostgreSQL no pgAdmin:
 
 ## API Endpoints
 
+### Animals
 Base URL: `http://localhost:8080/api/animals`
 
 | Método | Endpoint | Descrição |
@@ -85,7 +86,18 @@ Base URL: `http://localhost:8080/api/animals`
 | `DELETE` | `/{id}` | Remover animal |
 | `PATCH` | `/{id}/adoption` | Registrar adoção |
 
-### Exemplos de Requisições
+### Statistics
+Base URL: `http://localhost:8080/api/statistics`
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| `GET` | `/rescues?startDate={date}&endDate={date}` | Estatísticas de resgates por funcionário |
+
+**Regras:**
+- O intervalo entre `startDate` e `endDate` nao pode exceder 365 dias (1 ano)
+- Datas no formato ISO: `YYYY-MM-DD`
+
+### Exemplos de Requisicoes
 
 **Cadastrar Animal:**
 ```bash
@@ -95,13 +107,13 @@ curl -X POST http://localhost:8080/api/animals/create \
     "estimatedAgeInMonths": 12,
     "temporaryName": "Rex",
     "arrivalConditionDescription": "Encontrado na rua, saudável",
-    "receivedBy": "João Silva",
     "animalTypeId": "uuid-do-tipo",
-    "sizeId": "uuid-do-tamanho"
+    "sizeId": "uuid-do-tamanho",
+    "rescuedByEmployeeId": "uuid-do-funcionario"
   }'
 ```
 
-**Registrar Adoção:**
+**Registrar Adocao:**
 ```bash
 curl -X PATCH http://localhost:8080/api/animals/{id}/adoption \
   -H "Content-Type: application/json" \
@@ -110,9 +122,31 @@ curl -X PATCH http://localhost:8080/api/animals/{id}/adoption \
   }'
 ```
 
-**Listar Disponíveis para Adoção:**
+**Listar Disponiveis para Adocao:**
 ```bash
 curl http://localhost:8080/api/animals/available
+```
+
+**Estatisticas de Resgates por Funcionario:**
+```bash
+curl "http://localhost:8080/api/statistics/rescues?startDate=2024-01-01&endDate=2024-12-31"
+```
+
+Resposta:
+```json
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31",
+  "totalRescues": 16,
+  "rescuesByEmployee": [
+    {
+      "employeeId": "uuid",
+      "employeeName": "Joao Santos",
+      "employeeRole": "Animal Rescuer",
+      "rescueCount": 5
+    }
+  ]
+}
 ```
 
 ## Estrutura do Projeto
@@ -120,28 +154,54 @@ curl http://localhost:8080/api/animals/available
 ```
 src/main/java/com/victordemello/animalregistrationservice/
 ├── controllers/          # Endpoints REST
-├── dtos/                 # Objetos de transferência (Request/Response)
+│   ├── AnimalController.java
+│   └── RescueStatisticsController.java
+├── dtos/                 # Objetos de transferencia (Request/Response)
 ├── entities/             # Entidades JPA
-├── exceptions/           # Exceções customizadas e handlers
+│   ├── Animal.java
+│   ├── AnimalType.java
+│   ├── Employee.java
+│   └── Size.java
+├── exceptions/           # Excecoes customizadas e handlers
 ├── repositories/         # Interfaces de acesso a dados
-└── services/             # Regras de negócio
+└── services/             # Regras de negocio
+    ├── AnimalService.java
+    └── RescueStatisticsService.java
 
 src/main/resources/
-├── db/migration/         # Migrations Flyway
-└── application.yml       # Configurações da aplicação
+├── db/migration/         # Migrations Flyway (V1-V6)
+└── application.yml       # Configuracoes da aplicacao
 ```
 
 ## Migrations
 
-As migrations são executadas automaticamente pelo Flyway na inicialização:
+As migrations sao executadas automaticamente pelo Flyway na inicializacao:
 
-| Versão | Descrição |
+| Versao | Descricao |
 |--------|-----------|
-| V1 | Criação do schema inicial (tabelas e constraints) |
+| V1 | Criacao do schema inicial (tabelas e constraints) |
 | V2 | Seed de tipos de animais (Cat, Dog) |
 | V3 | Seed de tamanhos (Small, Medium, Large, Giant) |
+| V4 | Criacao da tabela de funcionarios (employees) |
+| V5 | Adicao de FK rescued_by_employee_id na tabela animals |
+| V6 | Seed de dados de exemplo (funcionarios e animais) |
 
-## Variáveis de Ambiente
+## Dados de Exemplo
+
+O banco ja vem populado com dados para testes:
+
+**Funcionarios:**
+| Nome | Cargo | Resgates |
+|------|-------|----------|
+| Maria Silva | Veterinarian | 3 |
+| Joao Santos | Animal Rescuer | 5 |
+| Ana Oliveira | Animal Rescuer | 4 |
+| Pedro Costa | Shelter Manager | 1 |
+| Carla Mendes | Animal Rescuer | 3 |
+
+**Animais:** 16 animais cadastrados (5 ja adotados) com datas de chegada entre Janeiro e Agosto de 2024.
+
+## Variaveis de Ambiente
 
 Consulte o arquivo `.env.example` para todas as variáveis disponíveis:
 

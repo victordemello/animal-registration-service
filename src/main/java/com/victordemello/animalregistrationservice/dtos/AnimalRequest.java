@@ -19,12 +19,11 @@ public record AnimalRequest(
         @Size(max = 500, message = "Arrival condition description must not exceed 500 characters")
         String arrivalConditionDescription,
 
-        @Size(max = 100, message = "Received by must not exceed 100 characters")
-        String receivedBy,
-
         @NotNull(message = "Animal type ID is required")
         UUID animalTypeId,
 
-        UUID sizeId
+        UUID sizeId,
+
+        UUID rescuedByEmployeeId
 ) {
 }

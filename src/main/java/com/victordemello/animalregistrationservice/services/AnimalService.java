@@ -5,11 +5,13 @@ import com.victordemello.animalregistrationservice.dtos.AnimalRequest;
 import com.victordemello.animalregistrationservice.dtos.AnimalResponse;
 import com.victordemello.animalregistrationservice.entities.Animal;
 import com.victordemello.animalregistrationservice.entities.AnimalType;
+import com.victordemello.animalregistrationservice.entities.Employee;
 import com.victordemello.animalregistrationservice.entities.Size;
 import com.victordemello.animalregistrationservice.exceptions.BusinessException;
 import com.victordemello.animalregistrationservice.exceptions.ResourceNotFoundException;
 import com.victordemello.animalregistrationservice.repositories.AnimalRepository;
 import com.victordemello.animalregistrationservice.repositories.AnimalTypeRepository;
+import com.victordemello.animalregistrationservice.repositories.EmployeeRepository;
 import com.victordemello.animalregistrationservice.repositories.SizeRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,15 +27,18 @@ public class AnimalService {
     private final AnimalRepository animalRepository;
     private final AnimalTypeRepository animalTypeRepository;
     private final SizeRepository sizeRepository;
+    private final EmployeeRepository employeeRepository;
 
     public AnimalService(
             AnimalRepository animalRepository,
             AnimalTypeRepository animalTypeRepository,
-            SizeRepository sizeRepository
+            SizeRepository sizeRepository,
+            EmployeeRepository employeeRepository
     ) {
         this.animalRepository = animalRepository;
         this.animalTypeRepository = animalTypeRepository;
         this.sizeRepository = sizeRepository;
+        this.employeeRepository = employeeRepository;
     }
 
     @Transactional
@@ -47,14 +52,20 @@ public class AnimalService {
                     .orElseThrow(() -> new ResourceNotFoundException("Size", "id", request.sizeId()));
         }
 
+        Employee employee = null;
+        if (request.rescuedByEmployeeId() != null) {
+            employee = employeeRepository.findById(request.rescuedByEmployeeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.rescuedByEmployeeId()));
+        }
+
         Animal animal = new Animal();
         animal.setEstimatedAgeInMonths(request.estimatedAgeInMonths());
         animal.setTemporaryName(request.temporaryName());
         animal.setArrivalConditionDescription(request.arrivalConditionDescription());
-        animal.setReceivedBy(request.receivedBy());
         animal.setArrivalDate(LocalDate.now());
         animal.setAnimalType(animalType);
         animal.setSize(size);
+        animal.setRescuedByEmployee(employee);
 
         Animal saved = animalRepository.save(animal);
         return AnimalResponse.fromEntity(saved);
@@ -99,12 +110,18 @@ public class AnimalService {
                     .orElseThrow(() -> new ResourceNotFoundException("Size", "id", request.sizeId()));
         }
 
+        Employee employee = null;
+        if (request.rescuedByEmployeeId() != null) {
+            employee = employeeRepository.findById(request.rescuedByEmployeeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", request.rescuedByEmployeeId()));
+        }
+
         animal.setEstimatedAgeInMonths(request.estimatedAgeInMonths());
         animal.setTemporaryName(request.temporaryName());
         animal.setArrivalConditionDescription(request.arrivalConditionDescription());
-        animal.setReceivedBy(request.receivedBy());
         animal.setAnimalType(animalType);
         animal.setSize(size);
+        animal.setRescuedByEmployee(employee);
 
         Animal saved = animalRepository.save(animal);
         return AnimalResponse.fromEntity(saved);

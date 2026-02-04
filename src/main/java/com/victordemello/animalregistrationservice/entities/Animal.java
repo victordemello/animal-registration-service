@@ -28,6 +28,10 @@ public class Animal {
     @Column(name = "received_by", length = 100)
     private String receivedBy;
 
+    @ManyToOne
+    @JoinColumn(name = "rescued_by_employee_id")
+    private Employee rescuedByEmployee;
+
     @CreatedDate
     @Column(name = "arrival_date", nullable = false, updatable = false)
     private LocalDate arrivalDate;
@@ -122,15 +126,23 @@ public class Animal {
         this.size = size;
     }
 
+    public Employee getRescuedByEmployee() {
+        return rescuedByEmployee;
+    }
+
+    public void setRescuedByEmployee(Employee rescuedByEmployee) {
+        this.rescuedByEmployee = rescuedByEmployee;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Animal animal = (Animal) o;
-        return Objects.equals(id, animal.id) && Objects.equals(estimatedAgeInMonths, animal.estimatedAgeInMonths) && Objects.equals(temporaryName, animal.temporaryName) && Objects.equals(arrivalConditionDescription, animal.arrivalConditionDescription) && Objects.equals(receivedBy, animal.receivedBy) && Objects.equals(arrivalDate, animal.arrivalDate) && Objects.equals(adoptionDate, animal.adoptionDate) && Objects.equals(dateOfDeath, animal.dateOfDeath) && Objects.equals(animalType, animal.animalType) && Objects.equals(size, animal.size);
+        return Objects.equals(id, animal.id) && Objects.equals(estimatedAgeInMonths, animal.estimatedAgeInMonths) && Objects.equals(temporaryName, animal.temporaryName) && Objects.equals(arrivalConditionDescription, animal.arrivalConditionDescription) && Objects.equals(receivedBy, animal.receivedBy) && Objects.equals(arrivalDate, animal.arrivalDate) && Objects.equals(adoptionDate, animal.adoptionDate) && Objects.equals(dateOfDeath, animal.dateOfDeath) && Objects.equals(animalType, animal.animalType) && Objects.equals(size, animal.size) && Objects.equals(rescuedByEmployee, animal.rescuedByEmployee);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, estimatedAgeInMonths, temporaryName, arrivalConditionDescription, receivedBy, arrivalDate, adoptionDate, dateOfDeath, animalType, size);
+        return Objects.hash(id, estimatedAgeInMonths, temporaryName, arrivalConditionDescription, receivedBy, arrivalDate, adoptionDate, dateOfDeath, animalType, size, rescuedByEmployee);
     }
 }
